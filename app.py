@@ -1,4 +1,3 @@
-
 import datetime
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -19,9 +18,7 @@ ZTRATY = {
     100: [15, 25, 38, 48, 56, 59, 59, 55, 47, 37, 22]
 }
 
-def vypocitej_ztratu(den_seti: str, den_poskozeni: str, poskozeni_listove_plochy: int) -> float:
-    datum_seti = datetime.datetime.strptime(den_seti, '%d.%m.%Y')
-    datum_poskozeni = datetime.datetime.strptime(den_poskozeni, '%d.%m.%Y')
+def vypocitej_ztratu(datum_seti: datetime.datetime, datum_poskozeni: datetime.datetime, poskozeni_listove_plochy: int) -> float:
     dny_od_seti = (datum_poskozeni - datum_seti).days
 
     if dny_od_seti <= DNY[0]:
@@ -39,7 +36,7 @@ def vypocitej_ztratu(den_seti: str, den_poskozeni: str, poskozeni_listove_plochy
 
     model = LinearRegression().fit(x, y)
     ztrata = model.predict(np.array([[dny_od_seti]]))[0]
-    return round(ztrata, 2)
+    return round(ztrata, 2), dny_od_seti
 
 # Streamlit UI
 st.title("Odhad ztráty na výnosu kukuřice")
@@ -52,7 +49,10 @@ with st.form("vstupni_formular"):
 
 if odeslat:
     try:
-        vysledek = vypocitej_ztratu(den_seti, den_poskozeni, poskozeni)
+        datum_seti = datetime.datetime.strptime(den_seti, '%d.%m.%Y')
+        datum_poskozeni = datetime.datetime.strptime(den_poskozeni, '%d.%m.%Y')
+        vysledek, dnu = vypocitej_ztratu(datum_seti, datum_poskozeni, poskozeni)
         st.success(f"Odhadovaná ztráta na výnosu je {vysledek} %")
+        st.info(f"Počet dní mezi setím a poškozením: {dnu} dní")
     except Exception as e:
         st.error(f"Chyba při výpočtu: {e}")
